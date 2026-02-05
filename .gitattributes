@@ -1,0 +1,2 @@
+content/deepfake-or-real-deal.h5p filter=lfs diff=lfs merge=lfs -text
+content/deepfake-or-real-deal-shortened.h5p filter=lfs diff=lfs merge=lfs -text
