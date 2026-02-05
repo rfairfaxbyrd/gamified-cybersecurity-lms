@@ -9,6 +9,6 @@ Current Status
 - Initial hosting plan: self-host on homelab
 
 How to run:
-- Open the LMS in a browser by navigating to <URL>. From there complete cybersecurity awareness training modules and challenge your brain doing so!
+- Open the LMS in a browser by navigating to \<URL>/ . From there complete cybersecurity awareness training modules and challenge your brain doing so!
 The application will be hosted on a homelab server and securely exposed to the internet using Cloudflare Tunnel. This allows external access without opening router ports.
 
