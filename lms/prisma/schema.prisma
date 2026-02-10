@@ -1,0 +1,121 @@
+// What this file does
+// - Defines the MVP database schema using Prisma ORM.
+//
+// Key concepts (plain English)
+// - SQLite is our MVP database: a single file on disk.
+// - Prisma reads this schema and generates a typed client (`@prisma/client`)
+//   that we use in server code.
+//
+// How it works
+// - `prisma migrate dev` turns this schema into SQL migrations.
+// - `prisma generate` creates the client used by `src/lib/db.ts`.
+//
+// How to change it
+// - Add/modify models here, then run:
+//   - `npm run prisma:migrate`
+//   - `npm run prisma:generate`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite connector note (important):
+// - Some Prisma SQLite setups/connectors do not support `enum` in the Prisma schema.
+// - To keep the MVP portable, we represent "enum-like" fields as strings and enforce
+//   allowed values in application code (Zod) + seed data.
+//
+// Allowed values (kept in sync with app code):
+// - role: "USER" | "ADMIN"
+// - difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+// - topic: "PASSWORDS" | "MFA" | "PHISHING" | "DEEPFAKES" | "PATCHING"
+// - launchType: "H5P" | "HTML" | "SCORM" | "SCORM_PLACEHOLDER"
+
+/// A person who can sign in (student, faculty, admin).
+/// MVP auth uses NextAuth Credentials:
+/// - sign-in checks `email` + `passwordHash`
+/// - `role` controls admin access
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("USER")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  attempts   Attempt[]
+  userBadges UserBadge[]
+}
+
+/// A training module in the catalog.
+/// Note: `id` is a human-friendly slug used in URLs (e.g. `/modules/spot-the-phish`).
+model Module {
+  id               String      @id
+  title            String
+  topic            String
+  difficulty       String
+  estimatedMinutes Int
+  description      String
+  launchType       String
+
+  /// Path inside the repository-level `/content` folder.
+  /// Examples:
+  /// - `spot-the-phish.h5p`
+  /// - `html/password-mini-quiz/index.html`
+  launchPath String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts Attempt[]
+}
+
+/// A result submission for a user attempting a module.
+/// MVP note: Because SCORM/xAPI tracking is heavy, the MVP stores results from a
+/// simple "Submit score + mark complete" UI in the module player.
+model Attempt {
+  id          String   @id @default(cuid())
+  userId      String
+  moduleId    String
+  score       Int?
+  completed   Boolean  @default(false)
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, moduleId])
+  @@index([moduleId])
+}
+
+/// A gamification badge a user can earn.
+/// MVP stores criteria as human-readable text; rules live in code (`src/lib/gamification.ts`).
+model Badge {
+  id          String   @id
+  name        String
+  description String
+  criteria    String
+  createdAt   DateTime @default(now())
+
+  userBadges UserBadge[]
+}
+
+/// A record that a user earned a badge at a specific time.
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([badgeId])
+}

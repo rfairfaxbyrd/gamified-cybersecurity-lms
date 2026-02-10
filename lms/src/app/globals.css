@@ -1,0 +1,54 @@
+/*
+What this file does
+- Defines the global CSS for the LMS.
+- Hosts our theme tokens as CSS variables (so colors can be swapped later).
+
+Key concepts
+- Tailwind provides utility classes, but CSS variables give us a single place to
+  change the "brand feel" without refactoring components.
+
+How it works
+- Tailwind's base/components/utilities layers are imported at the top.
+- The :root variables define neutral grays plus subtle Seton Hill–inspired accents.
+
+How to change it
+- Update the HSL values in :root (or add a [data-theme="..."] override).
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /*
+    Neutral foundation (grays/whites).
+    Values are HSL triplets: "<hue> <sat>% <light>%"
+  */
+  --bg: 0 0% 100%;
+  --fg: 222 47% 11%;
+  --card: 0 0% 100%;
+  --border: 214 32% 91%;
+  --muted: 210 40% 96%;
+  --muted-fg: 215 16% 47%;
+
+  /*
+    Subtle accent (Seton Hill–inspired).
+    You can swap these later without touching any component code.
+  */
+  --accent: 347 71% 28%; /* deep maroon */
+  --accent-fg: 0 0% 100%;
+  --accent-2: 43 74% 48%; /* warm gold */
+}
+
+/* A tiny bit of global polish (keep this minimal—Tailwind does most work). */
+html,
+body {
+  height: 100%;
+}
+
+/* Improve default focus styles for accessibility. */
+:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 2px;
+}
+

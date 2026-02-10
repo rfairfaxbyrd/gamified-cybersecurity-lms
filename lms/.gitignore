@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.env
+*.log
+
+# Prisma (SQLite database files)
+prisma/*.db
+prisma/*.db-journal
+
+# Generated vendor assets copied by postinstall
+public/vendor

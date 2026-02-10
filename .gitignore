@@ -1,0 +1,15 @@
+.DS_Store
+
+# Node / Next.js
+lms/node_modules
+lms/.next
+lms/.env
+lms/*.log
+
+# Prisma (SQLite database files)
+lms/prisma/*.db
+lms/prisma/*.db-journal
+
+# H5P extracted cache (generated at runtime)
+content/_extracted
+
