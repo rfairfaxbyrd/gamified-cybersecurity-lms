@@ -29,6 +29,17 @@ async function copyDir(from, to) {
 }
 
 async function main() {
+  // 0) Repair a missing/empty `@prisma/client` install (common after interrupted installs).
+  // Prisma bundles a copy of `@prisma/client` inside the `prisma` package, so we can
+  // copy it locally without hitting the network.
+  try {
+    await execFileAsync(process.execPath, [path.join(projectRoot, "scripts", "ensure-prisma-client.mjs")], {
+      cwd: projectRoot
+    });
+  } catch {
+    // If this fails, Prisma generate below will still print a helpful warning.
+  }
+
   // 1) Prisma client generation (prevents "@prisma/client did not initialize yet" runtime errors).
   // This does NOT require a database connection; it only needs the schema file.
   try {

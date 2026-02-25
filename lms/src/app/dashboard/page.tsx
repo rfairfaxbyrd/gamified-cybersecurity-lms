@@ -30,10 +30,15 @@ import {
 export default async function DashboardPage({
   searchParams
 }: {
-  searchParams?: { updated?: string; error?: string };
+  // In newer Next.js versions, `searchParams` can be passed as a Promise.
+  // `await` works for both a Promise and a plain object, so we write this defensively.
+  searchParams?:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
 }) {
   const session = await requireUser();
   const userId = session.user.id;
+  const resolvedSearchParams = (await searchParams) ?? {};
 
   const [modules, completedAttempts, attempts, userBadges] = await Promise.all([
     prisma.module.findMany({ orderBy: { title: "asc" } }),
@@ -77,13 +82,13 @@ export default async function DashboardPage({
         </p>
       </div>
 
-      {searchParams?.updated ? (
+      {resolvedSearchParams.updated ? (
         <Card className="mt-6 border border-border bg-muted p-4 text-sm text-fg">
           Saved! Your progress has been updated.
         </Card>
       ) : null}
 
-      {searchParams?.error ? (
+      {resolvedSearchParams.error ? (
         <Card className="mt-6 border border-border bg-muted p-4 text-sm text-fg">
           Something went wrong. Please try again.
         </Card>

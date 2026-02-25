@@ -39,10 +39,16 @@ import { requireUser } from "@/lib/guards";
 export default async function ModulePlayerPage({
   params
 }: {
-  params: { id: string };
+  // In newer Next.js versions, `params` can be passed as a Promise.
+  // `await` works for both a Promise and a plain object, so we write this defensively.
+  params: Promise<{ id?: string }> | { id?: string };
 }) {
   const session = await requireUser();
-  const trainingModule = await prisma.module.findUnique({ where: { id: params.id } });
+  const resolvedParams = await params;
+  const moduleId = resolvedParams?.id;
+  if (!moduleId) notFound();
+
+  const trainingModule = await prisma.module.findUnique({ where: { id: moduleId } });
   if (!trainingModule) notFound();
 
   const attempts = await prisma.attempt.findMany({

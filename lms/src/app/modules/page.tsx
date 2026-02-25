@@ -28,15 +28,24 @@ const filterSchema = z.object({
   difficulty: z.enum(DIFFICULTIES).optional()
 });
 
+function firstQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default async function ModulesPage({
   searchParams
 }: {
-  searchParams?: { topic?: string; difficulty?: string };
+  // In newer Next.js versions, `searchParams` can be passed as a Promise.
+  // `await` works for both a Promise and a plain object, so we write this defensively.
+  searchParams?:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
 }) {
   const session = await requireUser();
+  const resolvedSearchParams = (await searchParams) ?? {};
   const parsed = filterSchema.safeParse({
-    topic: searchParams?.topic,
-    difficulty: searchParams?.difficulty
+    topic: firstQueryValue(resolvedSearchParams.topic),
+    difficulty: firstQueryValue(resolvedSearchParams.difficulty)
   });
 
   const topic = parsed.success ? parsed.data.topic : undefined;
