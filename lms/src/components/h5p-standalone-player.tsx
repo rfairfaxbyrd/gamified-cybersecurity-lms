@@ -2,6 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 
+type H5PConstructor = new (anchorElement: HTMLElement, options: Record<string, unknown>) => unknown;
+
+function resolveH5PConstructor(mod: unknown): H5PConstructor | null {
+  /**
+   * Why this helper exists (plain English)
+   * - `h5p-standalone` is published as a browser-focused UMD bundle.
+   * - Depending on how Next.js bundles it, the constructor can appear as:
+   *     - `mod.H5P`
+   *     - `mod.default.H5P`
+   *     - or sometimes the default export itself
+   * - When we guess wrong, the UI shows errors like "H5P is not a constructor".
+   *
+   * This function tries the common shapes and returns the constructor if found.
+   */
+  const maybe = mod as { H5P?: unknown; default?: unknown } | null | undefined;
+  const candidate =
+    (maybe && "H5P" in maybe ? maybe.H5P : undefined) ??
+    (maybe && typeof maybe.default === "object" && maybe.default && "H5P" in (maybe.default as Record<string, unknown>)
+      ? (maybe.default as Record<string, unknown>).H5P
+      : undefined) ??
+    (maybe?.default ?? null);
+
+  return typeof candidate === "function" ? (candidate as H5PConstructor) : null;
+}
+
 /**
  * What this file does
  * - Embeds an extracted H5P module using the `h5p-standalone` runtime.
@@ -65,7 +90,13 @@ export function H5PStandalonePlayer({
         const frameCss = "/vendor/h5p-standalone/styles/h5p.css";
 
         // Dynamically import so this file never evaluates browser-only code on the server.
-        const { H5P } = await import("h5p-standalone");
+        const mod = await import("h5p-standalone");
+        const H5P = resolveH5PConstructor(mod);
+        if (!H5P) {
+          throw new Error(
+            "H5P runtime did not load (missing constructor). Try re-running `npm install` so vendor assets are copied into `/public/vendor/h5p-standalone`."
+          );
+        }
 
         // Note: some versions of `h5p-standalone` return a Promise-like object from
         // `new H5P(...)`, while others return a plain instance.

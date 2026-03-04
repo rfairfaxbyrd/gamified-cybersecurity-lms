@@ -32,8 +32,8 @@ datasource db {
 // Allowed values (kept in sync with app code):
 // - role: "USER" | "ADMIN"
 // - difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
-// - topic: "PASSWORDS" | "MFA" | "PHISHING" | "DEEPFAKES" | "PATCHING"
-// - launchType: "H5P" | "HTML" | "SCORM" | "SCORM_PLACEHOLDER"
+// - topic: "PASSWORDS" | "MFA" | "PHISHING" | "DEEPFAKES" | "PATCHING" | "AWARENESS"
+// - launchType: "H5P" | "HTML" | "SCORM" | "SCORM_PLACEHOLDER" | "APP"
 
 /// A person who can sign in (student, faculty, admin).
 /// MVP auth uses NextAuth Credentials:

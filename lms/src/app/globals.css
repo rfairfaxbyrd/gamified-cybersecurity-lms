@@ -52,3 +52,13 @@ body {
   outline-offset: 2px;
 }
 
+/*
+  Embed mode helpers
+  - Some modules (like the Word Search) are designed to be loaded in an iframe.
+  - In that case, showing the full LMS header inside the iframe wastes space.
+  - Client modules can toggle this by adding `gclms-embed` to <body>.
+*/
+body.gclms-embed [data-app-shell-header],
+body.gclms-embed [data-app-shell-preview] {
+  display: none;
+}

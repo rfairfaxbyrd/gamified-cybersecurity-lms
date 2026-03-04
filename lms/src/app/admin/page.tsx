@@ -135,7 +135,7 @@ export default async function AdminPage() {
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <Button asChild>
-          <a href="/api/admin/attempts.csv">Download attempts CSV</a>
+          <a href="/api/admin/attempts/export">Download attempts CSV</a>
         </Button>
         <Button variant="secondary" asChild>
           <Link href="/modules">Go to catalog</Link>

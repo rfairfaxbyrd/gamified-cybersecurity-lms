@@ -20,7 +20,14 @@ export function guessContentType(filename: string): string {
   if (lower.endsWith(".js")) return "text/javascript; charset=utf-8";
   if (lower.endsWith(".mjs")) return "text/javascript; charset=utf-8";
   if (lower.endsWith(".json")) return "application/json; charset=utf-8";
+  if (lower.endsWith(".map")) return "application/json; charset=utf-8";
+  if (lower.endsWith(".xml")) return "application/xml; charset=utf-8";
+  if (lower.endsWith(".wasm")) return "application/wasm";
+  if (lower.endsWith(".txt")) return "text/plain; charset=utf-8";
+  if (lower.endsWith(".csv")) return "text/csv; charset=utf-8";
+  if (lower.endsWith(".webmanifest")) return "application/manifest+json; charset=utf-8";
   if (lower.endsWith(".svg")) return "image/svg+xml";
+  if (lower.endsWith(".ico")) return "image/x-icon";
   if (lower.endsWith(".png")) return "image/png";
   if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
   if (lower.endsWith(".gif")) return "image/gif";
@@ -33,6 +40,7 @@ export function guessContentType(filename: string): string {
   if (lower.endsWith(".mp3")) return "audio/mpeg";
   if (lower.endsWith(".wav")) return "audio/wav";
   if (lower.endsWith(".mp4")) return "video/mp4";
+  if (lower.endsWith(".pdf")) return "application/pdf";
   if (lower.endsWith(".h5p")) return "application/octet-stream";
   if (lower.endsWith(".zip")) return "application/zip";
   return "application/octet-stream";

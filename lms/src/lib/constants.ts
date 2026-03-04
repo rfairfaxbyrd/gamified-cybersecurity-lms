@@ -19,8 +19,16 @@ export type Role = (typeof ROLES)[number];
 export const DIFFICULTIES = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
-export const MODULE_TOPICS = ["PASSWORDS", "MFA", "PHISHING", "DEEPFAKES", "PATCHING"] as const;
+export const MODULE_TOPICS = [
+  "PASSWORDS",
+  "MFA",
+  "PHISHING",
+  "DEEPFAKES",
+  "PATCHING",
+  // A catch-all topic for "general awareness" mini-games and mixed-topic content.
+  "AWARENESS"
+] as const;
 export type ModuleTopic = (typeof MODULE_TOPICS)[number];
 
-export const LAUNCH_TYPES = ["H5P", "HTML", "SCORM", "SCORM_PLACEHOLDER"] as const;
+export const LAUNCH_TYPES = ["H5P", "HTML", "SCORM", "SCORM_PLACEHOLDER", "APP"] as const;
 export type LaunchType = (typeof LAUNCH_TYPES)[number];

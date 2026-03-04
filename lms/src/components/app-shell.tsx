@@ -26,7 +26,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-border bg-card">
+      <header data-app-shell-header className="border-b border-border bg-card">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <Link href="/" className="font-semibold tracking-tight">
             Cybersecurity LMS
@@ -61,7 +61,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Optional global message area (useful for MVP "preview build" notices). */}
-      <div className="mx-auto w-full max-w-5xl px-4 pt-4">
+      <div data-app-shell-preview className="mx-auto w-full max-w-5xl px-4 pt-4">
         <Card className="border border-border bg-muted p-3 text-xs text-muted-fg">
           Preview note: This project is under active MVP development.
         </Card>
@@ -71,4 +71,3 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

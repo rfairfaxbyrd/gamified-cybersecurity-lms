@@ -43,13 +43,11 @@ async function main() {
   // 1) Prisma client generation (prevents "@prisma/client did not initialize yet" runtime errors).
   // This does NOT require a database connection; it only needs the schema file.
   try {
-    const prismaBin = path.join(
-      projectRoot,
-      "node_modules",
-      ".bin",
-      process.platform === "win32" ? "prisma.cmd" : "prisma"
-    );
-    await execFileAsync(prismaBin, ["generate"], { cwd: projectRoot });
+    // We intentionally invoke Prisma via `node node_modules/prisma/...` instead of relying
+    // on `node_modules/.bin/prisma` so this works even if an npm config like
+    // `install-links=false` prevents .bin links from being created.
+    const prismaEntry = path.join(projectRoot, "node_modules", "prisma", "build", "index.js");
+    await execFileAsync(process.execPath, [prismaEntry, "generate"], { cwd: projectRoot });
     // eslint-disable-next-line no-console
     console.log("[postinstall] Prisma client generated.");
   } catch (e) {

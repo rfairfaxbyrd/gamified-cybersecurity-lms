@@ -2,12 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { submitAttempt } from "@/actions/attempts";
 import { H5PStandalonePlayer } from "@/components/h5p-standalone-player";
-import { ScormIframePlayer } from "@/components/scorm-iframe-player";
+import { ModuleCompletionListener } from "@/components/module-completion-listener";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ensureH5PExtracted, looksLikeScormLaunchPath } from "@/lib/content";
+import { ensureH5PExtracted } from "@/lib/content";
 import { prisma } from "@/lib/db";
 import { humanizeEnum } from "@/lib/format";
 import { requireUser } from "@/lib/guards";
@@ -21,7 +21,7 @@ import { requireUser } from "@/lib/guards";
  *
  * Key concepts (plain English)
  * - Full SCORM/xAPI tracking is a large integration.
- * - MVP uses a manual "Submit score + Mark complete" UI.
+ * - MVP uses a manual "Submit score + Mark complete" UI for ALL module types.
  * - H5P packages are ZIPs; we extract them once and embed with `h5p-standalone`.
  *
  * How it works
@@ -30,10 +30,11 @@ import { requireUser } from "@/lib/guards";
  * - Client embeds content:
  *   - H5P: `H5PStandalonePlayer`
  *   - HTML: iframe to `/api/content/<launchPath>`
+ *   - SCORM: iframe to `/api/content/<launchPath>` (treated like HTML for MVP)
  *
  * How to change it
- * - To implement SCORM later, replace the placeholder with a real SCORM runtime.
- * - To auto-capture scores, wire module events into `submitAttempt`.
+ * - To implement SCORM score auto-capture later, add a SCORM runtime bridge and
+ *   wire it into `submitAttempt`.
  */
 
 export default async function ModulePlayerPage({
@@ -90,13 +91,43 @@ export default async function ModulePlayerPage({
     }
   }
 
-  const launchUrl = `/api/content/${trainingModule.launchPath}`;
-  const scormAutoSync =
-    trainingModule.launchType === "SCORM" ||
-    (trainingModule.launchType === "HTML" &&
-      (await looksLikeScormLaunchPath(trainingModule.launchPath)));
+  // For most module types, `launchPath` points to a file under the repo-root `/content` folder
+  // (served via `/api/content/...`).
+  // For launchType="APP", `launchPath` is a *Next.js route* inside this app.
+  const contentLaunchUrl = `/api/content/${trainingModule.launchPath}`;
+  const launchUrl =
+    trainingModule.launchType === "APP"
+      ? trainingModule.launchPath.startsWith("/")
+        ? trainingModule.launchPath
+        : `/${trainingModule.launchPath}`
+      : contentLaunchUrl;
 
-  const displayLaunchType = scormAutoSync ? "SCORM" : trainingModule.launchType;
+  /**
+   * Iframe sandboxing (plain English)
+   * - The sandbox attribute is a browser safety feature: it can prevent embedded content
+   *   from doing risky things (popups, top-level navigation, etc.).
+   * - Some SCORM/HTML exports (especially from authoring tools) rely on a few of those
+   *   capabilities to work correctly.
+   *
+   * MVP approach
+   * - For built-in LMS modules ("APP"), we keep the sandbox tighter.
+   * - For user-provided content ("HTML"/"SCORM"), we allow a few extra permissions for
+   *   compatibility.
+   */
+  const iframeSandbox =
+    trainingModule.launchType === "APP"
+      ? "allow-scripts allow-same-origin allow-forms"
+      : [
+          "allow-scripts",
+          "allow-same-origin",
+          "allow-forms",
+          // Common needs for SCORM/HTML exports:
+          "allow-popups",
+          "allow-popups-to-escape-sandbox",
+          "allow-modals",
+          "allow-downloads",
+          "allow-top-navigation-by-user-activation"
+        ].join(" ");
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
@@ -117,7 +148,7 @@ export default async function ModulePlayerPage({
               {trainingModule.estimatedMinutes} min
             </span>
             <span className="rounded-full border border-border bg-card px-2 py-1">
-              Launch: {humanizeEnum(displayLaunchType)}
+              Launch: {humanizeEnum(trainingModule.launchType)}
             </span>
             {bestCompletedScore >= 0 ? (
               <span className="rounded-full border border-border bg-card px-2 py-1">
@@ -133,16 +164,18 @@ export default async function ModulePlayerPage({
         <p className="mt-2 text-sm text-muted-fg">{trainingModule.description}</p>
 
         <div className="mt-4">
-          {trainingModule.launchType === "HTML" && !scormAutoSync ? (
+          {trainingModule.launchType === "HTML" ||
+          trainingModule.launchType === "SCORM" ||
+          trainingModule.launchType === "APP" ? (
             <div className="space-y-2">
               <p className="text-sm text-muted-fg">
-                This module is an exported HTML experience embedded in an iframe.
+                This module is embedded in an iframe.
               </p>
               <iframe
                 title={trainingModule.title}
                 src={launchUrl}
                 className="h-[70vh] w-full rounded-lg border border-border bg-card"
-                sandbox="allow-scripts allow-same-origin allow-forms"
+                sandbox={iframeSandbox}
               />
             </div>
           ) : null}
@@ -165,7 +198,7 @@ export default async function ModulePlayerPage({
 
               <div className="flex flex-wrap items-center gap-3">
                 <Button variant="secondary" asChild>
-                  <a href={launchUrl}>Download .h5p</a>
+                  <a href={contentLaunchUrl}>Download .h5p</a>
                 </Button>
                 <p className="text-xs text-muted-fg">
                   Tip: If embedding fails, re-run <code>npm install</code> (copies
@@ -182,116 +215,56 @@ export default async function ModulePlayerPage({
               below to capture results.
             </div>
           ) : null}
-
-          {scormAutoSync ? (
-            <ScormIframePlayer
-              moduleId={trainingModule.id}
-              title={trainingModule.title}
-              src={launchUrl}
-              learner={{
-                id: session.user.id,
-                name: session.user.name ?? null,
-                email: session.user.email ?? null
-              }}
-            />
-          ) : null}
         </div>
       </Card>
 
-      {scormAutoSync ? (
-        <Card className="mt-6 p-5">
-          <h2 className="font-semibold">Score sync</h2>
-          <p className="mt-2 text-sm text-muted-fg">
-            This looks like a SCORM package, so the LMS will try to capture the score and
-            completion automatically. You do not need to type your score manually.
-          </p>
-          <details className="mt-4 rounded-lg border border-border bg-card p-4">
-            <summary className="cursor-pointer text-sm font-medium">
-              Manual override (only if needed)
-            </summary>
-            <p className="mt-2 text-sm text-muted-fg">
-              If your SCORM content does not report results (or you want to test the
-              gamification flow), you can submit a manual attempt here.
-            </p>
+      <Card className="mt-6 p-5">
+        <h2 className="font-semibold">Submit your result</h2>
+        <p className="mt-2 text-sm text-muted-fg">
+          After you finish the activity, enter your score (0–100) and mark the module
+          complete. This records an attempt and updates points/badges.
+        </p>
 
-            <form action={submitAttempt} className="mt-4 space-y-4">
-              <input type="hidden" name="moduleId" value={trainingModule.id} />
+        {trainingModule.launchType === "APP" ? (
+          <div className="mt-4">
+            <ModuleCompletionListener moduleId={trainingModule.id} />
+          </div>
+        ) : null}
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="score">Score (0–100)</Label>
-                  <Input
-                    id="score"
-                    name="score"
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    max={100}
-                    placeholder="e.g., 85"
-                  />
-                  <p className="text-xs text-muted-fg">
-                    Leave blank if the module does not provide a score.
-                  </p>
-                </div>
+        <form action={submitAttempt} className="mt-4 space-y-4">
+          <input type="hidden" name="moduleId" value={trainingModule.id} />
 
-                <div className="flex items-end gap-2">
-                  <input
-                    id="completed"
-                    name="completed"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-border"
-                  />
-                  <Label htmlFor="completed">Mark complete</Label>
-                </div>
-              </div>
-
-              <Button type="submit">Save result</Button>
-            </form>
-          </details>
-        </Card>
-      ) : (
-        <Card className="mt-6 p-5">
-          <h2 className="font-semibold">Submit your result</h2>
-          <p className="mt-2 text-sm text-muted-fg">
-            After you finish the activity, enter your score (0–100) and mark the module
-            complete. This records an attempt and updates points/badges.
-          </p>
-
-          <form action={submitAttempt} className="mt-4 space-y-4">
-            <input type="hidden" name="moduleId" value={trainingModule.id} />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="score">Score (0–100)</Label>
-                <Input
-                  id="score"
-                  name="score"
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  max={100}
-                  placeholder="e.g., 85"
-                />
-                <p className="text-xs text-muted-fg">
-                  Leave blank if the module does not provide a score.
-                </p>
-              </div>
-
-              <div className="flex items-end gap-2">
-                <input
-                  id="completed"
-                  name="completed"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-border"
-                />
-                <Label htmlFor="completed">Mark complete</Label>
-              </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="score">Score (0–100)</Label>
+              <Input
+                id="score"
+                name="score"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                placeholder="e.g., 85"
+              />
+              <p className="text-xs text-muted-fg">
+                Leave blank if the module does not provide a score.
+              </p>
             </div>
 
-            <Button type="submit">Save result</Button>
-          </form>
-        </Card>
-      )}
+            <div className="flex items-end gap-2">
+              <input
+                id="completed"
+                name="completed"
+                type="checkbox"
+                className="h-4 w-4 rounded border-border"
+              />
+              <Label htmlFor="completed">Mark complete</Label>
+            </div>
+          </div>
+
+          <Button type="submit">Save result</Button>
+        </form>
+      </Card>
 
       <Card className="mt-6 p-5">
         <h2 className="font-semibold">Your recent attempts</h2>

@@ -149,6 +149,30 @@ async function main() {
         "Learn how to spot deepfakes and verify media before sharing.",
       launchType: LAUNCH_TYPES[0],
       launchPath: "deepfake-or-real-deal.h5p"
+    },
+    {
+      id: "cybersecurity-matching-game",
+      title: "Cybersecurity Matching Game",
+      topic: MODULE_TOPICS[5],
+      difficulty: DIFFICULTIES[0],
+      estimatedMinutes: 5,
+      description:
+        "Quick matching game to reinforce core cybersecurity concepts (phishing, MFA, malware, and more).",
+      launchType: LAUNCH_TYPES[0],
+      launchPath: "cybersecurity-memory.h5p"
+    },
+    {
+      id: "cyber-word-search",
+      title: "Cybersecurity Word Search",
+      topic: MODULE_TOPICS[5],
+      difficulty: DIFFICULTIES[0],
+      estimatedMinutes: 5,
+      description:
+        "Quick word search to reinforce key cybersecurity vocabulary (phishing, MFA, malware, and more).",
+      // "APP" means the content is hosted as a Next.js page route inside this LMS.
+      // The module player embeds it in an iframe.
+      launchType: LAUNCH_TYPES[4],
+      launchPath: "modules/word-search?moduleId=cyber-word-search&embed=1"
     }
   ];
 
