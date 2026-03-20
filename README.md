@@ -114,6 +114,152 @@ When the content calls the SCORM runtime API (`API` / `API_1484_11`) to report s
 the LMS captures it and stores it as an Attempt automatically. If a package does not report a
 score, you can still use the manual submission form on the module page as a fallback.
 
+## Built-in mini-modules (hosted as Next.js pages)
+
+Some mini-modules are shipped **inside** the LMS as normal Next.js routes (no files under `content/`).
+
+### Cybersecurity Word Search
+
+- URL (standalone): `/modules/word-search?moduleId=cyber-word-search`
+- URL (iframe embed): `/modules/word-search?moduleId=cyber-word-search&seed=2&embed=1`
+
+**postMessage payload (on completion)**
+
+```js
+{
+  type: "MODULE_COMPLETE",
+  moduleId,
+  score,
+  timeSeconds,
+  hintsUsed,
+  foundWords,
+  totalWords
+}
+```
+
+### Cybersecurity Wordle
+
+- URL (standalone): `/modules/cyber-wordle?moduleId=cyber-wordle-001`
+- URL (iframe embed): `/modules/cyber-wordle?moduleId=cyber-wordle-001&embed=1`
+- Optional deterministic testing: `/modules/cyber-wordle?moduleId=cyber-wordle-001&seed=patch&embed=1`
+
+**URL params**
+- `moduleId` (required for reporting): included in completion payload and saved Attempts
+- `seed` (optional): forces a specific solution word (examples: `0`, `2`, `patch`, `cyber`)
+- `embed=1` (optional): auto-post completion to the parent window (LMS)
+
+**postMessage payload (on completion)**
+
+```js
+{
+  type: "MODULE_COMPLETE",
+  moduleId,
+  score,
+  attemptsUsed,
+  success,
+  solutionWord,
+  timeSeconds
+}
+```
+
+### Cyber Crush
+
+- URL (standalone): `/modules/cyber-crush?moduleId=cyber-crush-001`
+- URL (iframe embed): `/modules/cyber-crush?moduleId=cyber-crush-001&embed=1`
+
+What it is:
+- A native match-3 cybersecurity mini-game with two levels:
+- Level 1: Malware icons
+- Level 2: Security icons
+
+Cyber Crush asset folder:
+- Place icons in `content/cyber-crush/icons/`
+- Expected filenames:
+- `worm.png`
+- `virus.png`
+- `trojan.png`
+- `adware.png`
+- `spyware.png`
+- `ransomware.png`
+- `firewall.png`
+- `shield.png`
+- `lock.png`
+- `mfa.png`
+- `patch.png`
+- `antivirus.png`
+
+How icon replacement works:
+- If a file exists, the module loads it through `/api/content/cyber-crush/icons/<filename>`
+- If a file is missing, Cyber Crush falls back to a labeled colored tile and keeps running
+
+LMS completion payload:
+
+```js
+{
+  type: "MODULE_COMPLETE",
+  moduleId,
+  score,
+  success,
+  levelsCompleted,
+  movesUsed,
+  timeSeconds
+}
+```
+
+### Cyber Hill Climber
+
+- URL (standalone): `/modules/cyber-hill-climber?moduleId=cyber-hill-climber-001`
+- URL (iframe embed): `/modules/cyber-hill-climber?moduleId=cyber-hill-climber-001&embed=1`
+
+What it is:
+- A native decision-making mini-game where a climber reaches the summit by choosing the safer cybersecurity answer at each stage.
+
+How gameplay works:
+- One question = one mountain section
+- Correct answer = climb higher
+- Wrong answer = slip, fall, and end the run
+- Reaching the summit requires answering every question safely
+
+Where to edit questions:
+- `lms/src/lib/cyberHillQuestions.ts`
+
+How scoring works:
+- Win = `100`
+- Early loss = score based on how many questions you cleared before falling
+- Scoring helper lives in `lms/src/lib/cyberHillGameLogic.ts`
+
+LMS completion payload:
+
+```js
+{
+  type: "MODULE_COMPLETE",
+  moduleId,
+  score,
+  success,
+  questionsAnswered,
+  totalQuestions,
+  timeSeconds
+}
+```
+
+## Notes: MVP regression checks
+
+This repo includes interactive modules that need a browser to fully validate.
+In this environment, port binding is restricted, so the automated checks run were:
+- `cd lms && npm run lint`
+- `cd lms && npm run build`
+
+After pulling changes locally, manually verify:
+- Open the module catalog (`/modules`)
+- Launch at least 2 existing H5P/SCORM modules from the catalog
+- Complete the Word Search module
+- Complete the Cybersecurity Wordle module
+- Load and finish Cyber Crush
+- Load and finish Cyber Hill Climber
+- Temporarily rename or remove one Cyber Crush icon and confirm the fallback labeled tile appears
+- Load the admin dashboard (`/admin`)
+- Confirm the native modules save Attempts and emit `MODULE_COMPLETE`
+
 ## Admin analytics + CSV export
 
 - Admin dashboard: `/admin`

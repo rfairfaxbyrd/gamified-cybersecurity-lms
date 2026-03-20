@@ -173,6 +173,41 @@ async function main() {
       // The module player embeds it in an iframe.
       launchType: LAUNCH_TYPES[4],
       launchPath: "modules/word-search?moduleId=cyber-word-search&embed=1"
+    },
+    {
+      id: "cyber-wordle-001",
+      title: "Cybersecurity Wordle",
+      topic: MODULE_TOPICS[5],
+      difficulty: DIFFICULTIES[0],
+      estimatedMinutes: 3,
+      description:
+        "Wordle-style mini-game: guess the 5-letter cybersecurity word in 6 tries.",
+      // "APP" means the content is hosted as a Next.js page route inside this LMS.
+      // The module player embeds it in an iframe.
+      launchType: LAUNCH_TYPES[4],
+      launchPath: "modules/cyber-wordle?moduleId=cyber-wordle-001&embed=1"
+    },
+    {
+      id: "cyber-crush-001",
+      title: "Cyber Crush",
+      topic: MODULE_TOPICS[5],
+      difficulty: DIFFICULTIES[1],
+      estimatedMinutes: 5,
+      description:
+        "Match-3 cybersecurity mini-game with a malware level and a security tools level.",
+      launchType: LAUNCH_TYPES[4],
+      launchPath: "modules/cyber-crush?moduleId=cyber-crush-001&embed=1"
+    },
+    {
+      id: "cyber-hill-climber-001",
+      title: "Cyber Hill Climber",
+      topic: MODULE_TOPICS[5],
+      difficulty: DIFFICULTIES[0],
+      estimatedMinutes: 4,
+      description:
+        "Decision-based mountain climb game where each safer cybersecurity choice moves you closer to the summit.",
+      launchType: LAUNCH_TYPES[4],
+      launchPath: "modules/cyber-hill-climber?moduleId=cyber-hill-climber-001&embed=1"
     }
   ];
 

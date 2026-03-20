@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Gamified Cybersecurity Awareness Training LMS (Next.js + Prisma + SQLite + NextAuth).",
   "scripts": {
-    "predev": "npm run prisma:generate && npm run next:ensure-manifests",
+    "predev": "npm run next:clear-cache && npm run prisma:generate && npm run next:ensure-manifests",
     "dev": "node scripts/run-next.mjs dev",
     "prebuild": "npm run prisma:generate",
     "build": "node scripts/run-next.mjs build",

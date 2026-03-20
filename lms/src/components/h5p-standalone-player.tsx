@@ -138,7 +138,7 @@ export function H5PStandalonePlayer({
   }, [h5pJsonPath]);
 
   return (
-    <div className="space-y-3">
+    <div className="mx-auto min-h-[78vh] max-w-[42rem] space-y-3">
       {error ? (
         <div className="rounded-lg border border-border bg-muted p-3 text-sm text-fg">
           {error}

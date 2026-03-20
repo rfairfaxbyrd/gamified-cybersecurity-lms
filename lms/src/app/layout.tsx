@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
+import { EmbedModeSync } from "@/components/embed-mode-sync";
 
 /**
  * What this file does
@@ -33,9 +35,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-bg text-fg antialiased">
+        <Suspense fallback={null}>
+          <EmbedModeSync />
+        </Suspense>
         <AppShell>{children}</AppShell>
       </body>
     </html>
   );
 }
-

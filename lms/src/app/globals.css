@@ -56,9 +56,30 @@ body {
   Embed mode helpers
   - Some modules (like the Word Search) are designed to be loaded in an iframe.
   - In that case, showing the full LMS header inside the iframe wastes space.
-  - Client modules can toggle this by adding `gclms-embed` to <body>.
+  - A shared client helper now toggles `gclms-embed` whenever the route includes
+    `?embed=1`, so embedded native modules all get the same chrome/padding behavior.
 */
 body.gclms-embed [data-app-shell-header],
 body.gclms-embed [data-app-shell-preview] {
   display: none;
+}
+
+/*
+  Shared embedded module sizing
+  - Embedded native modules were still feeling oversized because the shared iframe
+    view was roomy, and the inner module pages were allowed to fill almost all of it.
+  - We keep the outer LMS player large enough to breathe, but cap the *inner* module
+    content to a more game-friendly width so it feels framed instead of blown up.
+*/
+body.gclms-embed [data-embed-page] {
+  width: 100% !important;
+  max-width: 48rem !important;
+  margin-inline: auto !important;
+  padding: 0.25rem !important;
+}
+
+@media (min-width: 1024px) {
+  body.gclms-embed [data-embed-page] {
+    padding: 0.5rem !important;
+  }
 }

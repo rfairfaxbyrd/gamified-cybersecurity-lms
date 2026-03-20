@@ -130,7 +130,7 @@ export default async function ModulePlayerPage({
         ].join(" ");
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10">
+    <main className="mx-auto w-full max-w-[76rem] px-3 py-4 sm:px-4 lg:px-5 lg:py-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <Link href="/modules" className="text-sm text-muted-fg hover:text-fg">
@@ -159,7 +159,7 @@ export default async function ModulePlayerPage({
         </div>
       </div>
 
-      <Card className="mt-6 p-5">
+      <Card className="mt-5 p-4 lg:p-5">
         <h2 className="font-semibold">Module</h2>
         <p className="mt-2 text-sm text-muted-fg">{trainingModule.description}</p>
 
@@ -167,21 +167,30 @@ export default async function ModulePlayerPage({
           {trainingModule.launchType === "HTML" ||
           trainingModule.launchType === "SCORM" ||
           trainingModule.launchType === "APP" ? (
-            <div className="space-y-2">
+            <div className="mx-auto min-h-[85vh] max-w-[48rem] space-y-2">
               <p className="text-sm text-muted-fg">
                 This module is embedded in an iframe.
               </p>
+              {/**
+               * Shared sizing fix (plain English)
+               * - The player window should feel tall enough that most gameplay is visible
+               *   immediately, without the user needing to scroll just to see the main action.
+               * - We keep the tighter width framing from the earlier sizing pass, but give
+               *   the shared module viewport much more vertical height.
+               * - This helps custom modules, SCORM-style exports, and HTML content feel better framed
+               *   without changing their internal logic.
+               */}
               <iframe
                 title={trainingModule.title}
                 src={launchUrl}
-                className="h-[70vh] w-full rounded-lg border border-border bg-card"
+                className="h-[78vh] min-h-[560px] w-full rounded-xl border border-border bg-card md:h-[82vh] md:min-h-[620px] lg:h-[86vh] lg:min-h-[700px] xl:h-[88vh] xl:min-h-[760px] xl:max-h-[960px]"
                 sandbox={iframeSandbox}
               />
             </div>
           ) : null}
 
           {trainingModule.launchType === "H5P" ? (
-            <div className="space-y-3">
+            <div className="mx-auto min-h-[85vh] max-w-[48rem] space-y-3">
               {h5pError ? (
                 <div className="rounded-lg border border-border bg-muted p-3 text-sm text-fg">
                   {h5pError}
@@ -218,7 +227,7 @@ export default async function ModulePlayerPage({
         </div>
       </Card>
 
-      <Card className="mt-6 p-5">
+      <Card className="mt-5 p-4 lg:p-5">
         <h2 className="font-semibold">Submit your result</h2>
         <p className="mt-2 text-sm text-muted-fg">
           After you finish the activity, enter your score (0–100) and mark the module
@@ -266,7 +275,7 @@ export default async function ModulePlayerPage({
         </form>
       </Card>
 
-      <Card className="mt-6 p-5">
+      <Card className="mt-5 p-4 lg:p-5">
         <h2 className="font-semibold">Your recent attempts</h2>
         {attempts.length === 0 ? (
           <p className="mt-2 text-sm text-muted-fg">

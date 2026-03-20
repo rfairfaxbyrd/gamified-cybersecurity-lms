@@ -42,6 +42,12 @@ import type { WordSearchCell, WordSearchPuzzle } from "@/lib/wordSearchGenerator
  * How to change words / grid size / scoring
  * - Words and grid size are configured in the page that calls the generator.
  * - Scoring is in `computeScore()` below.
+ *
+ * How this sizing pass works
+ * - The shared LMS module viewport remains large so the puzzle still has room.
+ * - Inside that large viewport, we tighten helper cards, chips, and spacing so the
+ *   actual letter grid stays visually dominant.
+ * - We keep buttons readable and touch-friendly while reducing visual bulk.
  */
 
 type CompletionPayload = {
@@ -222,15 +228,6 @@ export function WordSearchGame(props: {
   // Completion reporting / saving
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error" | "unauthorized">("idle");
   const postedRef = useRef(false);
-
-  // If this module is inside an iframe, allow it to hide the LMS chrome for a tighter embed.
-  useEffect(() => {
-    if (!embed) return;
-    document.body.classList.add("gclms-embed");
-    return () => {
-      document.body.classList.remove("gclms-embed");
-    };
-  }, [embed]);
 
   function clearHintHighlight() {
     if (hintTimeoutRef.current) {
@@ -458,7 +455,7 @@ export function WordSearchGame(props: {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10">
+    <div data-embed-page className="mx-auto w-full max-w-[44rem] px-4 py-5">
       <style>{`
         @keyframes gclms-shake {
           0% { transform: translateX(0); }
@@ -469,31 +466,31 @@ export function WordSearchGame(props: {
         }
       `}</style>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Cybersecurity Word Search</h1>
-          <p className="text-sm text-muted-fg">
+          <h1 className="text-xl font-semibold">Cybersecurity Word Search</h1>
+          <p className="text-[13px] text-muted-fg">
             Find all {totalWords} words. Drag to select (desktop) or tap start/end (mobile).
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="rounded-full border border-border bg-card px-3 py-1 text-muted-fg">
+        <div className="flex flex-wrap items-center gap-1.5 text-[13px]">
+          <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-muted-fg">
             Variant {puzzle.variant + 1}/5
           </span>
-          <span className="rounded-full border border-border bg-card px-3 py-1 text-muted-fg">
+          <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-muted-fg">
             Time: <span className="font-medium text-fg">{formatTime(timeSeconds)}</span>
           </span>
-          <span className="rounded-full border border-border bg-card px-3 py-1 text-muted-fg">
+          <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-muted-fg">
             Score: <span className="font-medium text-fg">{score}</span>
           </span>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <Card className="p-4 lg:col-span-2">
+      <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+        <Card className="p-3.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-sm text-muted-fg">
+            <div className="text-[13px] text-muted-fg">
               Words found:{" "}
               <span className="font-medium text-fg">
                 {foundWords}/{totalWords}
@@ -510,13 +507,13 @@ export function WordSearchGame(props: {
           </div>
 
           {status ? (
-            <div className="mt-3 rounded-lg border border-border bg-muted p-3 text-sm text-fg">
+            <div className="mt-2.5 rounded-lg border border-border bg-muted px-3 py-2 text-[13px] text-fg">
               {status}
             </div>
           ) : null}
 
           <div
-            className="mt-4 inline-block rounded-lg border border-border bg-card p-3"
+            className="mt-3 inline-block rounded-lg border border-border bg-card p-2.5"
             style={{
               animation: shake ? "gclms-shake 0.25s" : undefined,
               touchAction: "none" // allows pointermove tracking in the grid on mobile
@@ -569,7 +566,7 @@ export function WordSearchGame(props: {
                       data-row={r}
                       data-col={c}
                       className={[
-                        "flex h-9 w-9 items-center justify-center rounded-md border text-sm font-semibold",
+                        "flex h-[1.65rem] w-[1.65rem] items-center justify-center rounded-md border text-[11px] font-semibold md:h-7 md:w-7",
                         "select-none",
                         inFound
                           ? "border-accent bg-accent/10 text-fg"
@@ -600,20 +597,20 @@ export function WordSearchGame(props: {
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-3.5">
           <h2 className="font-semibold">Word list</h2>
-          <p className="mt-1 text-sm text-muted-fg">
+          <p className="mt-1 text-[13px] text-muted-fg">
             Words appear forward/backward, vertical, and diagonal.
           </p>
 
-          <ul className="mt-4 space-y-2 text-sm">
+          <ul className="mt-3 space-y-1.5 text-[13px]">
             {puzzle.words.map((w) => {
               const found = foundSet.has(w.key);
               return (
                 <li
                   key={w.key}
                   className={[
-                    "flex items-center justify-between rounded-md border px-3 py-2",
+                    "flex items-center justify-between rounded-md border px-2.5 py-1.5",
                     found ? "border-accent/50 bg-accent/5" : "border-border bg-card"
                   ].join(" ")}
                 >
@@ -621,25 +618,25 @@ export function WordSearchGame(props: {
                     {w.display}
                   </span>
                   {found ? (
-                    <span className="text-xs font-medium text-accent">Found</span>
+                    <span className="text-[11px] font-medium text-accent">Found</span>
                   ) : (
-                    <span className="text-xs text-muted-fg">—</span>
+                    <span className="text-[11px] text-muted-fg">—</span>
                   )}
                 </li>
               );
             })}
           </ul>
 
-          <div className="mt-4 space-y-2">
-            <div className="text-sm text-muted-fg">
+          <div className="mt-3 space-y-1.5">
+            <div className="text-[13px] text-muted-fg">
               Hints used: <span className="font-medium text-fg">{hintsUsed}</span>
             </div>
-            <div className="text-sm text-muted-fg">
+            <div className="text-[13px] text-muted-fg">
               Wrong attempts: <span className="font-medium text-fg">{wrongAttempts}</span>
             </div>
           </div>
 
-          <div className="mt-4 space-y-2">
+          <div className="mt-3 space-y-2">
             <Button
               type="button"
               className="w-full"
@@ -654,13 +651,13 @@ export function WordSearchGame(props: {
             </Button>
 
             {saveState === "unauthorized" ? (
-              <p className="text-xs text-muted-fg">
+              <p className="text-[11px] text-muted-fg">
                 You need to sign in to save results. Open this module inside the LMS (or sign in in another tab).
               </p>
             ) : null}
 
             {completed ? (
-              <p className="text-xs text-muted-fg">
+              <p className="text-[11px] text-muted-fg">
                 Completion payload:{" "}
                 <code className="rounded bg-muted px-1 py-0.5">
                   {"{ type: \"MODULE_COMPLETE\", moduleId, score, timeSeconds, hintsUsed, foundWords, totalWords }"}
